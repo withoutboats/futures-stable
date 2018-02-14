@@ -1,0 +1,12 @@
+[package]
+name = "futures-stable"
+version = "0.1.0"
+authors = ["boats <boats@mozilla.com>"]
+
+[dependencies.anchor-experiment]
+git = "https://github.com/withoutboats/anchor_experiment"
+features = ["std"]
+
+[dependencies.futures-core]
+git = "https://github.com/rust-lang-nursery/futures-rs"
+branch = "0.2"
