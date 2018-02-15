@@ -21,6 +21,12 @@ pub trait PinnedFuture {
     {
         Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
     }
+
+    fn anchor_send<'a>(self) -> AnchoredBox<Future<Item = Self::Item, Error = Self::Error> + Send + 'a>
+        where Self: Send + Sized + 'a
+    {
+        Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
+    }
 }
 
 pub trait PinnedStream {
@@ -31,6 +37,12 @@ pub trait PinnedStream {
 
     fn anchor<'a>(self) -> AnchoredBox<Stream<Item = Self::Item, Error = Self::Error> + 'a>
         where Self: Sized + 'a
+    {
+        Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
+    }
+
+    fn anchor_send<'a>(self) -> AnchoredBox<Stream<Item = Self::Item, Error = Self::Error> + Send + 'a>
+        where Self: Send + Sized + 'a
     {
         Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
     }
