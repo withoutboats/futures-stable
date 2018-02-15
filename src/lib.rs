@@ -6,8 +6,8 @@ extern crate futures_core;
 mod anchored_newtypes;
 mod unsafe_pin;
 
-use anchor_experiment::{PinMut, Anchor};
-use futures_core::{Poll, task};
+use anchor_experiment::{PinMut, Anchor, MovePinned};
+use futures_core::{Future, Stream, Poll, task};
 
 use anchored_newtypes::*;
 use unsafe_pin::UnsafePin;
@@ -31,6 +31,15 @@ pub trait PinnedFuture {
     }
 }
 
+impl<F: Future + MovePinned> PinnedFuture for F {
+    type Item = F::Item;
+    type Error = F::Error;
+
+    fn poll(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error> {
+        F::poll(&mut *self, ctx)
+    }
+}
+
 pub trait PinnedStream {
     type Item;
     type Error;
@@ -47,5 +56,14 @@ pub trait PinnedStream {
         where Self: Send + Sized + 'a
     {
         AnchoredStreamSend { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
+    }
+}
+
+impl<S: Stream + MovePinned> PinnedStream for S {
+    type Item = S::Item;
+    type Error = S::Error;
+
+    fn poll(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
+        S::poll(&mut *self, ctx)
     }
 }
