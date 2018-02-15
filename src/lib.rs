@@ -3,11 +3,13 @@
 extern crate anchor_experiment;
 extern crate futures_core;
 
+mod anchored_newtypes;
 mod unsafe_pin;
 
-use anchor_experiment::{PinMut, AnchoredBox, Anchor};
-use futures_core::{Future, Stream, Poll, task};
+use anchor_experiment::{PinMut, Anchor};
+use futures_core::{Poll, task};
 
+use anchored_newtypes::*;
 use unsafe_pin::UnsafePin;
 
 pub trait PinnedFuture {
@@ -16,16 +18,16 @@ pub trait PinnedFuture {
 
     fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
 
-    fn anchor<'a>(self) -> AnchoredBox<Future<Item = Self::Item, Error = Self::Error> + 'a>
+    fn anchor<'a>(self) -> AnchoredFuture<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
     {
-        Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
+        AnchoredFuture { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
     }
 
-    fn anchor_send<'a>(self) -> AnchoredBox<Future<Item = Self::Item, Error = Self::Error> + Send + 'a>
+    fn anchor_send<'a>(self) -> AnchoredFutureSend<'a, Self::Item, Self::Error>
         where Self: Send + Sized + 'a
     {
-        Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
+        AnchoredFutureSend { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
     }
 }
 
@@ -35,15 +37,15 @@ pub trait PinnedStream {
 
     fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
 
-    fn anchor<'a>(self) -> AnchoredBox<Stream<Item = Self::Item, Error = Self::Error> + 'a>
+    fn anchor<'a>(self) -> AnchoredStream<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
     {
-        Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
+        AnchoredStream { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
     }
 
-    fn anchor_send<'a>(self) -> AnchoredBox<Stream<Item = Self::Item, Error = Self::Error> + Send + 'a>
+    fn anchor_send<'a>(self) -> AnchoredStreamSend<'a, Self::Item, Self::Error>
         where Self: Send + Sized + 'a
     {
-        Anchor::new(Box::new(unsafe { UnsafePin::new(self) }))
+        AnchoredStreamSend { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
     }
 }
