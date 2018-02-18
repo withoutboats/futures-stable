@@ -2,8 +2,10 @@
 
 extern crate anchor_experiment;
 extern crate futures_core;
+extern crate futures_executor;
 
 mod anchored_newtypes;
+mod executor;
 mod unsafe_pin;
 
 use anchor_experiment::{PinMut, Anchor, MovePinned};
