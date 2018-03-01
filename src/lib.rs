@@ -4,68 +4,71 @@ extern crate anchor_experiment;
 extern crate futures_core;
 extern crate futures_executor;
 
-mod anchored_newtypes;
 mod executor;
 mod unsafe_pin;
 
-use anchor_experiment::{PinMut, Anchor, MovePinned};
+use anchor_experiment::{Pin, PinBox, MovePinned};
 use futures_core::{Future, Stream, Poll, task};
 
-use anchored_newtypes::*;
 use unsafe_pin::UnsafePin;
 
-pub trait PinnedFuture {
+pub type PinnedFuture<'a, T, E> = PinBox<Future<Item = T, Error = E> + 'a>;
+pub type PinnedFutureSend<'a, T, E> = PinBox<Future<Item = T, Error = E> + Send + 'a>;
+pub type PinnedStream<'a, T, E> = PinBox<Stream<Item = T, Error = E> + 'a>;
+pub type PinnedStreamSend<'a, T, E> = PinBox<Stream<Item = T, Error = E> + Send + 'a>;
+
+pub trait StableFuture {
     type Item;
     type Error;
 
-    fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
+    fn poll(self: Pin<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
 
-    fn anchor<'a>(self) -> AnchoredFuture<'a, Self::Item, Self::Error>
+    fn pin<'a>(self) -> PinnedFuture<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
     {
-        AnchoredFuture { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
+        PinBox::new(unsafe { UnsafePin::new(self) })
     }
 
-    fn anchor_send<'a>(self) -> AnchoredFutureSend<'a, Self::Item, Self::Error>
+    fn pin_send<'a>(self) -> PinnedFutureSend<'a, Self::Item, Self::Error>
         where Self: Send + Sized + 'a
     {
-        AnchoredFutureSend { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
+        PinBox::new(unsafe { UnsafePin::new(self) })
     }
 }
 
-impl<F: Future + MovePinned> PinnedFuture for F {
+impl<F: Future + MovePinned> StableFuture for F {
     type Item = F::Item;
     type Error = F::Error;
 
-    fn poll(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error> {
+    fn poll(mut self: Pin<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error> {
         F::poll(&mut *self, ctx)
     }
 }
 
-pub trait PinnedStream {
+pub trait StableStream {
     type Item;
     type Error;
 
-    fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
+    fn poll(self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
 
-    fn anchor<'a>(self) -> AnchoredStream<'a, Self::Item, Self::Error>
+    fn pin<'a>(self) -> PinnedStream<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
     {
-        AnchoredStream { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
+        PinBox::new(unsafe { UnsafePin::new(self) })
     }
 
-    fn anchor_send<'a>(self) -> AnchoredStreamSend<'a, Self::Item, Self::Error>
+    fn pin_send<'a>(self) -> PinnedStreamSend<'a, Self::Item, Self::Error>
         where Self: Send + Sized + 'a
     {
-        AnchoredStreamSend { inner: Anchor::new(Box::new(unsafe { UnsafePin::new(self) })) }
+        PinBox::new(unsafe { UnsafePin::new(self) })
     }
 }
 
-impl<S: Stream + MovePinned> PinnedStream for S {
+impl<S: Stream + MovePinned> StableStream for S {
     type Item = S::Item;
     type Error = S::Error;
 
-    fn poll(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
+    fn poll(mut self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
         S::poll(&mut *self, ctx)
     }
 }
