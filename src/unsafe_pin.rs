@@ -24,7 +24,7 @@ impl<'a, T: StableFuture> Future for UnsafePin<T> {
 impl<'a, T: StableStream> Stream for UnsafePin<T> {
     type Item = T::Item;
     type Error = T::Error;
-    fn poll(&mut self, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
-        T::poll(unsafe { Pin::new_unchecked(&mut self.inner) }, ctx)
+    fn poll_next(&mut self, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
+        T::poll_next(unsafe { Pin::new_unchecked(&mut self.inner) }, ctx)
     }
 }

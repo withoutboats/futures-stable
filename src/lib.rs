@@ -49,7 +49,7 @@ pub trait StableStream {
     type Item;
     type Error;
 
-    fn poll(self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
+    fn poll_next(self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
 
     fn pin<'a>(self) -> PinnedStream<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
@@ -68,7 +68,7 @@ impl<S: Stream + MovePinned> StableStream for S {
     type Item = S::Item;
     type Error = S::Error;
 
-    fn poll(mut self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
-        S::poll(&mut *self, ctx)
+    fn poll_next(mut self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
+        S::poll_next(&mut *self, ctx)
     }
 }
