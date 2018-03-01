@@ -10,6 +10,7 @@ mod unsafe_pin;
 use anchor_experiment::{Pin, PinBox, MovePinned};
 use futures_core::{Future, Stream, Poll, task};
 
+pub use executor::{StableExecutor, block_on_stable};
 use unsafe_pin::UnsafePin;
 
 pub type PinnedFuture<'a, T, E> = PinBox<Future<Item = T, Error = E> + 'a>;
