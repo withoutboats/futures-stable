@@ -5,12 +5,18 @@ authors = ["boats <boats@mozilla.com>"]
 
 [dependencies.anchor-experiment]
 git = "https://github.com/withoutboats/anchor_experiment"
-features = ["std"]
+default-features = false
 
 [dependencies.futures-core]
 git = "https://github.com/rust-lang-nursery/futures-rs"
 branch = "0.2"
+default-features = false
 
 [dependencies.futures-executor]
 git = "https://github.com/rust-lang-nursery/futures-rs"
 branch = "0.2"
+default-features = false
+
+[features]
+std = ["anchor-experiment/std", "futures-core/std", "futures-executor/std"]
+default = ["std"]
