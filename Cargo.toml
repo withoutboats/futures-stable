@@ -3,7 +3,18 @@ name = "futures-stable"
 version = "0.2.0-alpha"
 authors = ["boats <boats@mozilla.com>"]
 
-[dependencies]
-pin-api = "0.1.1"
-futures-core = "0.2.0-alpha"
-futures-executor = "0.2.0-alpha"
+[dependencies.pin-api]
+version = "0.1.1"
+default-features = false
+
+[dependencies.futures-core]
+version = "0.2.0-alpha"
+default-features = false
+
+[dependencies.futures-executor]
+version = "0.2.0-alpha"
+default-features = false
+
+[features]
+std = ["pin-api/std", "futures-core/std", "futures-executor/std"]
+default = ["std"]
