@@ -1,13 +1,13 @@
 #![feature(arbitrary_self_types)]
 
-extern crate anchor_experiment;
+extern crate pin_api;
 extern crate futures_core;
 extern crate futures_executor;
 
 mod executor;
 mod unsafe_pin;
 
-use anchor_experiment::{PinMut, PinBox, Unpin};
+use pin_api::{PinMut, PinBox, Unpin};
 use futures_core::{Future, Stream, Poll, task};
 
 pub use executor::{StableExecutor, block_on_stable};

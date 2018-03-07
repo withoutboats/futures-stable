@@ -1,4 +1,4 @@
-use anchor_experiment::PinMut;
+use pin_api::PinMut;
 use futures_core::{Future, Stream, Poll, task};
 
 use {StableFuture, StableStream};
