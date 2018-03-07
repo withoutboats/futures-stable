@@ -1,7 +1,10 @@
 [package]
 name = "futures-stable"
+description = "futures which support internal references"
 version = "0.2.0-alpha"
 authors = ["boats <boats@mozilla.com>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/withoutboats/futures-stable"
 
 [dependencies.pin-api]
 version = "0.1.1"
