@@ -24,11 +24,6 @@ if_std! {
 
     pub use executor::{StableExecutor, block_on_stable};
     use unsafe_pin::UnsafePin;
-
-    pub type PinnedFuture<'a, T, E> = PinBox<Future<Item = T, Error = E> + 'a>;
-    pub type PinnedFutureSend<'a, T, E> = PinBox<Future<Item = T, Error = E> + Send + 'a>;
-    pub type PinnedStream<'a, T, E> = PinBox<Stream<Item = T, Error = E> + 'a>;
-    pub type PinnedStreamSend<'a, T, E> = PinBox<Stream<Item = T, Error = E> + Send + 'a>;
 }
 
 pub trait StableFuture {
@@ -38,14 +33,14 @@ pub trait StableFuture {
     fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
 
     #[cfg(feature = "std")]
-    fn pin<'a>(self) -> PinnedFutureSend<'a, Self::Item, Self::Error>
+    fn pin<'a>(self) -> PinBox<Future<Item = Self::Item, Error = Self::Error> + Send + 'a>
         where Self: Send + Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
     }
 
     #[cfg(feature = "std")]
-    fn pin_local<'a>(self) -> PinnedFuture<'a, Self::Item, Self::Error>
+    fn pin_local<'a>(self) -> PinBox<Future<Item = Self::Item, Error = Self::Error> + 'a>
         where Self: Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
@@ -68,14 +63,14 @@ pub trait StableStream {
     fn poll_next(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
 
     #[cfg(feature = "std")]
-    fn pin<'a>(self) -> PinnedStreamSend<'a, Self::Item, Self::Error>
+    fn pin<'a>(self) -> PinBox<Stream<Item = Self::Item, Error = Self::Error> + Send + 'a>
         where Self: Send + Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
     }
 
     #[cfg(feature = "std")]
-    fn pin_local<'a>(self) -> PinnedStream<'a, Self::Item, Self::Error>
+    fn pin_local<'a>(self) -> PinBox<Stream<Item = Self::Item, Error = Self::Error> + 'a>
         where Self: Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
