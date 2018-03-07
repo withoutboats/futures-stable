@@ -24,14 +24,14 @@ pub trait StableFuture {
 
     fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
 
-    fn pin<'a>(self) -> PinnedFuture<'a, Self::Item, Self::Error>
-        where Self: Sized + 'a
+    fn pin<'a>(self) -> PinnedFutureSend<'a, Self::Item, Self::Error>
+        where Self: Send + Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
     }
 
-    fn pin_send<'a>(self) -> PinnedFutureSend<'a, Self::Item, Self::Error>
-        where Self: Send + Sized + 'a
+    fn pin_local<'a>(self) -> PinnedFuture<'a, Self::Item, Self::Error>
+        where Self: Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
     }
@@ -52,14 +52,14 @@ pub trait StableStream {
 
     fn poll_next(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
 
-    fn pin<'a>(self) -> PinnedStream<'a, Self::Item, Self::Error>
-        where Self: Sized + 'a
+    fn pin<'a>(self) -> PinnedStreamSend<'a, Self::Item, Self::Error>
+        where Self: Send + Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
     }
 
-    fn pin_send<'a>(self) -> PinnedStreamSend<'a, Self::Item, Self::Error>
-        where Self: Send + Sized + 'a
+    fn pin_local<'a>(self) -> PinnedStream<'a, Self::Item, Self::Error>
+        where Self: Sized + 'a
     {
         PinBox::new(unsafe { UnsafePin::new(self) })
     }
