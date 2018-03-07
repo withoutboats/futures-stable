@@ -7,7 +7,7 @@ extern crate futures_executor;
 mod executor;
 mod unsafe_pin;
 
-use anchor_experiment::{Pin, PinBox, MovePinned};
+use anchor_experiment::{PinMut, PinBox, Unpin};
 use futures_core::{Future, Stream, Poll, task};
 
 pub use executor::{StableExecutor, block_on_stable};
@@ -22,7 +22,7 @@ pub trait StableFuture {
     type Item;
     type Error;
 
-    fn poll(self: Pin<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
+    fn poll(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error>;
 
     fn pin<'a>(self) -> PinnedFuture<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
@@ -37,11 +37,11 @@ pub trait StableFuture {
     }
 }
 
-impl<F: Future + MovePinned> StableFuture for F {
+impl<F: Future + Unpin> StableFuture for F {
     type Item = F::Item;
     type Error = F::Error;
 
-    fn poll(mut self: Pin<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error> {
+    fn poll(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error> {
         F::poll(&mut *self, ctx)
     }
 }
@@ -50,7 +50,7 @@ pub trait StableStream {
     type Item;
     type Error;
 
-    fn poll_next(self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
+    fn poll_next(self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error>;
 
     fn pin<'a>(self) -> PinnedStream<'a, Self::Item, Self::Error>
         where Self: Sized + 'a
@@ -65,11 +65,11 @@ pub trait StableStream {
     }
 }
 
-impl<S: Stream + MovePinned> StableStream for S {
+impl<S: Stream + Unpin> StableStream for S {
     type Item = S::Item;
     type Error = S::Error;
 
-    fn poll_next(mut self: Pin<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
+    fn poll_next(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
         S::poll_next(&mut *self, ctx)
     }
 }
