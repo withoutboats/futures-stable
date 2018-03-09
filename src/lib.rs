@@ -13,7 +13,7 @@ macro_rules! if_std {
     )*)
 }
 
-use pin_api::{PinMut, Unpin};
+use pin_api::PinMut;
 use futures_core::{Future, Stream, Poll, task};
 
 if_std! {
@@ -47,12 +47,14 @@ pub trait StableFuture {
     }
 }
 
-impl<F: Future + Unpin> StableFuture for F {
+impl<F: Future> StableFuture for F {
     type Item = F::Item;
     type Error = F::Error;
 
     fn poll(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Self::Item, Self::Error> {
-        F::poll(&mut *self, ctx)
+        // `Self: Future` implies `Self: Unpin` already, but we don't want to force users to
+        // explicitly specify that
+        F::poll(unsafe { PinMut::get_mut(&mut self) }, ctx)
     }
 }
 
@@ -77,11 +79,13 @@ pub trait StableStream {
     }
 }
 
-impl<S: Stream + Unpin> StableStream for S {
+impl<S: Stream> StableStream for S {
     type Item = S::Item;
     type Error = S::Error;
 
     fn poll_next(mut self: PinMut<Self>, ctx: &mut task::Context) -> Poll<Option<Self::Item>, Self::Error> {
-        S::poll_next(&mut *self, ctx)
+        // `Self: Stream` implies `Self: Unpin` already, but we don't want to force users to
+        // explicitly specify that
+        S::poll_next(unsafe { PinMut::get_mut(&mut self) }, ctx)
     }
 }
